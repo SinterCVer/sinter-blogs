@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <script type="application/javascript" src='https://sinterwong.gitee.io/js/theme-mode.js'></script>
+    <link rel="stylesheet" href='https://sinterwong.gitee.io/css/frameworks.min.css' />
+    <link rel="stylesheet" href='https://sinterwong.gitee.io/css/github.min.css' />
+    <link rel="stylesheet" href='https://sinterwong.gitee.io/css/github-style.css' />
+    <link rel="stylesheet" href='https://sinterwong.gitee.io/css/light.css' />
+    <link rel="stylesheet" href='https://sinterwong.gitee.io/css/dark.css' />
+    <link rel="stylesheet" href='https://sinterwong.gitee.io/css/syntax.css' />
+    <title>基于深度学习的骨骼动作识别研究综述 - Sinter&#39;s blogs</title>
+    
+    <link rel="icon" type="image/x-icon" href='https://sinterwong.gitee.io/images/favicon.ico'>
+    
+    <meta name="theme-color" content="#1e2327">
+
+    
+    <meta name="description"
+  content="基于深度学习的骨骼动作识别研究综述 【paper】A Survey on 3D Skeleton-Based Action Recognition Using Learning Method
+当前动作识别的主流研究方向包括RGB图像分类、骨架信息的识别、时序的行为检测、时空的行为检测。
+Abstrck 由于关键点检测的潜在优势，基于3D骨架的行为识别成为CV的活跃主题。
+然而，之前的行为识别综述大多数集中于调研以视频或者RGB数据为输入的方法，关于骨架数据为输入的方法调研的很少，一般都是直接说一下骨架数据的表示或某些经典技术在特定数据集上的表现；此外，尽管深度学习方法已经在这个领域应用多年，但是仍然没有相关的研究来从深度学习结构的角度对其进行介绍或总结。
+本文以数据驱动的方式，介绍骨架信息在输入RNN/CNN/GCN算子前的预处理方式；最后简要介绍了一下最大的3D骨架数据集NTU-RGB&#43;D及其最新版本NTU-RGB&#43;D 120，并展示基于这两个数据集测试的几种顶级的算法。
+Introduction 行为识别有非常广泛但又未被充分解决的应用领域，例如智能监控系统、人机交互、虚拟现实、机器人等。以往的方法中都使用RGB图像序列，深度图像序列，视频或者这些模态的特定融合（例如RGB&#43;光流），也取得了超出预期的结果。然而，和骨架数据相比，前述模态会产生更多的计算消耗，且在面对复杂背景以及人体尺度变化、视角变化和运动速度变化时鲁棒性不足。此外，像Microsoft Kinect这样的传感器和一些先进的人体姿态估计算法都可以让我们更轻松地获得准确的3D骨架数据。
+除了与其他模态数据相比具有的优势，骨架序列还有如下三个主要的特点：
+  空间信息，关节节点与相邻节点之间存在较强的相关性，从而获得了丰富的体结构信息
+  时域信息，帧与帧之间的方式，强时间相关也可以使用。
+  时空域共线关系
+  因此，骨骼数据吸引了许多研究者对人类行为识别或检测的努力，骨骼的应用也越来越广泛。
+基于骨骼序列的行为识别是个时序问题，因此传统的基于骨架的方法通常都是从特定的骨架序列中提取运动模式，这引出了许多手工特征的研究，这些手工特征经常会利用不同关节间的相对3D旋转和平移。然而，有文献认为这些手工特征只在一些特定数据集上表现良好，这进一步说明了从一个数据集上提取的手工特征可能无法迁移到其他数据集上，这使得行为识别算法难以推广或应用到更广泛的应用领域。
+随着深度学习方法在其他在其他计算机视觉任务上的发展和先进表现，使用骨架数据的RNN,CNN和GCN也开始出现。图2展示了基于3D骨架的深度学习行为识别方法的通用pipeline。
+在基于RNN的方法中，骨架序列是关节坐标的自然时间序列，这可以被视为序列向量，而RNN本身就适合于处理时间序列数据。此外，为了进一步改善学习到的关节序列的时序上下文信息，一些别的RNN(LSTM,GRU)方法也被用到骨架行为识别中。
+当使用CNN来处理这一基于骨架的任务的时候，可以将其视为基于RNN方法的补充，因为CNN结构能更好地捕获输入数据的空间cues，而基于RNN的方法正缺乏空间信息的构建。
+最后，相对新的方法图卷积神经网络GCN也有用于骨架数据处理中，因为骨架数据本身就是一个自然的拓扑图数据结构（关节点和骨头可以被视为图的节点和边），而不是图像或序列那样的格式。
+Methods (1) RNN based methods RNN[40]通过将上一时刻的输出作为当前时刻的输入来形成其结构内部的递归连接，这被证明是一种处理序列数据的有效方法。LSTM和GRU分别在RNN内部引入了门机制和线性记忆单元弥补梯度消失和long-term，改善RNN模型水准。
+第一方面，时空建模算是行为识别任务的首要原则，由于RNN结构缺乏空间建模能力，相关的方法通常也无法取得竞争性的结果。最近，Hong和Liang提出了一个新颖的双流RNN结构来为骨架数据建模时域和空域特征，其中骨架轴的交换作为数据预处理来更好地学习空间域特征，该工作的框架如下图3所示。
+Jun和Amir对骨架序列的遍历方法进行了研究，以此来获取时空域的隐藏关系。一般的方法将将关节排列成简单的链，这忽略了相邻关节的运动依赖关系，而提出了基于树结构的关节遍历方法，该方法在人体关节的联系不够牢固时也不会添加虚假连接。然后使用带有信任门trust gate的LSTM来区分输入，即如果树状输入单元是可靠的，则将使用输入的潜在空间信息来更新记忆单元。
+受CNN适合建模空间信息这一特性的启发，Chunyu和Baochang使用attention RNN和CNN模型来改善复杂的时空建模。首先在残差学习模块中使用时域注意力子模型，来重新校准骨架序列中的时域注意力，然后后接时空卷积子模型（将上一子模型输出的校准后的关节序列视为图像）。
+此外，使用一个注意力循环关系 LSTM 网络来学习骨架序列中的时空特征，其中 RNN 学习空间特征、多层LSTM学习时域特征。
+第二方面，网络结构也算是RNN的固有缺点。尽管RNN的性质决定了其适合处理序列数据， 但众所周知的是梯度爆炸和消失问题不可避免。LSTM 和 GRU可以在一定程度上缓解这一问题，但tanh和sigmoid激活函数可能还是会导致层间的梯度衰减。为了解决这一缺陷，一些新型的RNN结构被提出，Shuai和Wanqing提出了一个独立的RNN，该网络可以解决梯度爆炸和消失问题，这使得构建一个更长更深的RNN网络来学习鲁棒性更好的高级语义特征成为可能。这一改进的RNN不仅可以用于骨架行为识别，也可用用于其他领域例如语言模型。在这种结构中，一层内的神经元彼此独立，因此可以用于处理更长的序列。
+最后一个方面，即第三个方面，数据驱动方面。考虑到并不是所有的关节对行为分析有用，在LSTM网络中添加了全局意识关注global contex-aware attention来选择性地关注骨架序列中信息丰富的关节。图4（a）展示了该方法的可视化效果，从中我们可以发现信息量更大的关节用红色圆圈表示，表示这些关节对该特定的行为更重要。
+另外，由于数据集或深度传感器所提供的骨架并不是完美的，这可能会影响行为识别任务的结果，所以[52]将骨架转换为另一种坐标系统来提升尺度变化、旋转、平移的鲁棒性，然后从转换后的数据中提取显著运动特征，而不是直接将原始骨架数据输入到LSTM中，图4（b）展示了这一特征表示过程。
+除了上述这些，还有很多有价值的使用RNN的方法着眼于大视角变化、单个骨架中各关节的关系等问题。然而，我们必须承认在特定的建模方面RNN-based的方法确实比CNN based方法弱，接下来讨论另一个有趣的问题：CNN-based方法如果进行时域信息建模以及如何找到时空信息的相对平衡点。
+(2) CNN Based methods 卷积神经网络也被用于基于骨架的行为识别。和RNN不同的是，CNN凭借其自然、出色的高级信息提取能力可以有效且轻松地学习高级语义线索。不过CNN通常专注于image-based任务，而基于骨架序列的行为识别任务毫无疑问是一个强时间依赖的问题。所以在基于CNN的架构中，如何平衡且更充分地利用空间信息和时域信息就非常有挑战了。
+为了满足CNN输入的需要，3D骨架序列数据通常要从向量序列转换为伪图像，然而，要同时具有时空信息的相关表示pertinent representation并不容易，因此许多研究者将骨架关节编码为多个2D伪图像，然后将其输入到CNN中来学习有用的特征[53,54]。" />
+<meta name="keywords"
+  content='' />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://sinterwong.gitee.io/post/%E8%AE%BA%E6%96%87%E7%BF%BB%E8%AF%91%E5%9F%BA%E4%BA%8E%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%9A%84%E9%AA%A8%E9%AA%BC%E5%8A%A8%E4%BD%9C%E8%AF%86%E5%88%AB%E7%A0%94%E7%A9%B6%E7%BB%BC%E8%BF%B0/" />
+
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="基于深度学习的骨骼动作识别研究综述 - Sinter&#39;s blogs" />
+<meta name="twitter:description"
+  content="基于深度学习的骨骼动作识别研究综述 【paper】A Survey on 3D Skeleton-Based Action Recognition Using Learning Method
+当前动作识别的主流研究方向包括RGB图像分类、骨架信息的识别、时序的行为检测、时空的行为检测。
+Abstrck 由于关键点检测的潜在优势，基于3D骨架的行为识别成为CV的活跃主题。
+然而，之前的行为识别综述大多数集中于调研以视频或者RGB数据为输入的方法，关于骨架数据为输入的方法调研的很少，一般都是直接说一下骨架数据的表示或某些经典技术在特定数据集上的表现；此外，尽管深度学习方法已经在这个领域应用多年，但是仍然没有相关的研究来从深度学习结构的角度对其进行介绍或总结。
+本文以数据驱动的方式，介绍骨架信息在输入RNN/CNN/GCN算子前的预处理方式；最后简要介绍了一下最大的3D骨架数据集NTU-RGB&#43;D及其最新版本NTU-RGB&#43;D 120，并展示基于这两个数据集测试的几种顶级的算法。
+Introduction 行为识别有非常广泛但又未被充分解决的应用领域，例如智能监控系统、人机交互、虚拟现实、机器人等。以往的方法中都使用RGB图像序列，深度图像序列，视频或者这些模态的特定融合（例如RGB&#43;光流），也取得了超出预期的结果。然而，和骨架数据相比，前述模态会产生更多的计算消耗，且在面对复杂背景以及人体尺度变化、视角变化和运动速度变化时鲁棒性不足。此外，像Microsoft Kinect这样的传感器和一些先进的人体姿态估计算法都可以让我们更轻松地获得准确的3D骨架数据。
+除了与其他模态数据相比具有的优势，骨架序列还有如下三个主要的特点：
+  空间信息，关节节点与相邻节点之间存在较强的相关性，从而获得了丰富的体结构信息
+  时域信息，帧与帧之间的方式，强时间相关也可以使用。
+  时空域共线关系
+  因此，骨骼数据吸引了许多研究者对人类行为识别或检测的努力，骨骼的应用也越来越广泛。
+基于骨骼序列的行为识别是个时序问题，因此传统的基于骨架的方法通常都是从特定的骨架序列中提取运动模式，这引出了许多手工特征的研究，这些手工特征经常会利用不同关节间的相对3D旋转和平移。然而，有文献认为这些手工特征只在一些特定数据集上表现良好，这进一步说明了从一个数据集上提取的手工特征可能无法迁移到其他数据集上，这使得行为识别算法难以推广或应用到更广泛的应用领域。
+随着深度学习方法在其他在其他计算机视觉任务上的发展和先进表现，使用骨架数据的RNN,CNN和GCN也开始出现。图2展示了基于3D骨架的深度学习行为识别方法的通用pipeline。
+在基于RNN的方法中，骨架序列是关节坐标的自然时间序列，这可以被视为序列向量，而RNN本身就适合于处理时间序列数据。此外，为了进一步改善学习到的关节序列的时序上下文信息，一些别的RNN(LSTM,GRU)方法也被用到骨架行为识别中。
+当使用CNN来处理这一基于骨架的任务的时候，可以将其视为基于RNN方法的补充，因为CNN结构能更好地捕获输入数据的空间cues，而基于RNN的方法正缺乏空间信息的构建。
+最后，相对新的方法图卷积神经网络GCN也有用于骨架数据处理中，因为骨架数据本身就是一个自然的拓扑图数据结构（关节点和骨头可以被视为图的节点和边），而不是图像或序列那样的格式。
+Methods (1) RNN based methods RNN[40]通过将上一时刻的输出作为当前时刻的输入来形成其结构内部的递归连接，这被证明是一种处理序列数据的有效方法。LSTM和GRU分别在RNN内部引入了门机制和线性记忆单元弥补梯度消失和long-term，改善RNN模型水准。
+第一方面，时空建模算是行为识别任务的首要原则，由于RNN结构缺乏空间建模能力，相关的方法通常也无法取得竞争性的结果。最近，Hong和Liang提出了一个新颖的双流RNN结构来为骨架数据建模时域和空域特征，其中骨架轴的交换作为数据预处理来更好地学习空间域特征，该工作的框架如下图3所示。
+Jun和Amir对骨架序列的遍历方法进行了研究，以此来获取时空域的隐藏关系。一般的方法将将关节排列成简单的链，这忽略了相邻关节的运动依赖关系，而提出了基于树结构的关节遍历方法，该方法在人体关节的联系不够牢固时也不会添加虚假连接。然后使用带有信任门trust gate的LSTM来区分输入，即如果树状输入单元是可靠的，则将使用输入的潜在空间信息来更新记忆单元。
+受CNN适合建模空间信息这一特性的启发，Chunyu和Baochang使用attention RNN和CNN模型来改善复杂的时空建模。首先在残差学习模块中使用时域注意力子模型，来重新校准骨架序列中的时域注意力，然后后接时空卷积子模型（将上一子模型输出的校准后的关节序列视为图像）。
+此外，使用一个注意力循环关系 LSTM 网络来学习骨架序列中的时空特征，其中 RNN 学习空间特征、多层LSTM学习时域特征。
+第二方面，网络结构也算是RNN的固有缺点。尽管RNN的性质决定了其适合处理序列数据， 但众所周知的是梯度爆炸和消失问题不可避免。LSTM 和 GRU可以在一定程度上缓解这一问题，但tanh和sigmoid激活函数可能还是会导致层间的梯度衰减。为了解决这一缺陷，一些新型的RNN结构被提出，Shuai和Wanqing提出了一个独立的RNN，该网络可以解决梯度爆炸和消失问题，这使得构建一个更长更深的RNN网络来学习鲁棒性更好的高级语义特征成为可能。这一改进的RNN不仅可以用于骨架行为识别，也可用用于其他领域例如语言模型。在这种结构中，一层内的神经元彼此独立，因此可以用于处理更长的序列。
+最后一个方面，即第三个方面，数据驱动方面。考虑到并不是所有的关节对行为分析有用，在LSTM网络中添加了全局意识关注global contex-aware attention来选择性地关注骨架序列中信息丰富的关节。图4（a）展示了该方法的可视化效果，从中我们可以发现信息量更大的关节用红色圆圈表示，表示这些关节对该特定的行为更重要。
+另外，由于数据集或深度传感器所提供的骨架并不是完美的，这可能会影响行为识别任务的结果，所以[52]将骨架转换为另一种坐标系统来提升尺度变化、旋转、平移的鲁棒性，然后从转换后的数据中提取显著运动特征，而不是直接将原始骨架数据输入到LSTM中，图4（b）展示了这一特征表示过程。
+除了上述这些，还有很多有价值的使用RNN的方法着眼于大视角变化、单个骨架中各关节的关系等问题。然而，我们必须承认在特定的建模方面RNN-based的方法确实比CNN based方法弱，接下来讨论另一个有趣的问题：CNN-based方法如果进行时域信息建模以及如何找到时空信息的相对平衡点。
+(2) CNN Based methods 卷积神经网络也被用于基于骨架的行为识别。和RNN不同的是，CNN凭借其自然、出色的高级信息提取能力可以有效且轻松地学习高级语义线索。不过CNN通常专注于image-based任务，而基于骨架序列的行为识别任务毫无疑问是一个强时间依赖的问题。所以在基于CNN的架构中，如何平衡且更充分地利用空间信息和时域信息就非常有挑战了。
+为了满足CNN输入的需要，3D骨架序列数据通常要从向量序列转换为伪图像，然而，要同时具有时空信息的相关表示pertinent representation并不容易，因此许多研究者将骨架关节编码为多个2D伪图像，然后将其输入到CNN中来学习有用的特征[53,54]。" />
+<meta name="twitter:site" content="https://sinterwong.gitee.io/" />
+<meta name="twitter:creator" content="" />
+<meta name="twitter:image"
+  content="https://sinterwong.gitee.io/">
+
+
+<meta property="og:type" content="article" />
+<meta property="og:title" content="基于深度学习的骨骼动作识别研究综述 - Sinter&#39;s blogs">
+<meta property="og:description"
+  content="基于深度学习的骨骼动作识别研究综述 【paper】A Survey on 3D Skeleton-Based Action Recognition Using Learning Method
+当前动作识别的主流研究方向包括RGB图像分类、骨架信息的识别、时序的行为检测、时空的行为检测。
+Abstrck 由于关键点检测的潜在优势，基于3D骨架的行为识别成为CV的活跃主题。
+然而，之前的行为识别综述大多数集中于调研以视频或者RGB数据为输入的方法，关于骨架数据为输入的方法调研的很少，一般都是直接说一下骨架数据的表示或某些经典技术在特定数据集上的表现；此外，尽管深度学习方法已经在这个领域应用多年，但是仍然没有相关的研究来从深度学习结构的角度对其进行介绍或总结。
+本文以数据驱动的方式，介绍骨架信息在输入RNN/CNN/GCN算子前的预处理方式；最后简要介绍了一下最大的3D骨架数据集NTU-RGB&#43;D及其最新版本NTU-RGB&#43;D 120，并展示基于这两个数据集测试的几种顶级的算法。
+Introduction 行为识别有非常广泛但又未被充分解决的应用领域，例如智能监控系统、人机交互、虚拟现实、机器人等。以往的方法中都使用RGB图像序列，深度图像序列，视频或者这些模态的特定融合（例如RGB&#43;光流），也取得了超出预期的结果。然而，和骨架数据相比，前述模态会产生更多的计算消耗，且在面对复杂背景以及人体尺度变化、视角变化和运动速度变化时鲁棒性不足。此外，像Microsoft Kinect这样的传感器和一些先进的人体姿态估计算法都可以让我们更轻松地获得准确的3D骨架数据。
+除了与其他模态数据相比具有的优势，骨架序列还有如下三个主要的特点：
+  空间信息，关节节点与相邻节点之间存在较强的相关性，从而获得了丰富的体结构信息
+  时域信息，帧与帧之间的方式，强时间相关也可以使用。
+  时空域共线关系
+  因此，骨骼数据吸引了许多研究者对人类行为识别或检测的努力，骨骼的应用也越来越广泛。
+基于骨骼序列的行为识别是个时序问题，因此传统的基于骨架的方法通常都是从特定的骨架序列中提取运动模式，这引出了许多手工特征的研究，这些手工特征经常会利用不同关节间的相对3D旋转和平移。然而，有文献认为这些手工特征只在一些特定数据集上表现良好，这进一步说明了从一个数据集上提取的手工特征可能无法迁移到其他数据集上，这使得行为识别算法难以推广或应用到更广泛的应用领域。
+随着深度学习方法在其他在其他计算机视觉任务上的发展和先进表现，使用骨架数据的RNN,CNN和GCN也开始出现。图2展示了基于3D骨架的深度学习行为识别方法的通用pipeline。
+在基于RNN的方法中，骨架序列是关节坐标的自然时间序列，这可以被视为序列向量，而RNN本身就适合于处理时间序列数据。此外，为了进一步改善学习到的关节序列的时序上下文信息，一些别的RNN(LSTM,GRU)方法也被用到骨架行为识别中。
+当使用CNN来处理这一基于骨架的任务的时候，可以将其视为基于RNN方法的补充，因为CNN结构能更好地捕获输入数据的空间cues，而基于RNN的方法正缺乏空间信息的构建。
+最后，相对新的方法图卷积神经网络GCN也有用于骨架数据处理中，因为骨架数据本身就是一个自然的拓扑图数据结构（关节点和骨头可以被视为图的节点和边），而不是图像或序列那样的格式。
+Methods (1) RNN based methods RNN[40]通过将上一时刻的输出作为当前时刻的输入来形成其结构内部的递归连接，这被证明是一种处理序列数据的有效方法。LSTM和GRU分别在RNN内部引入了门机制和线性记忆单元弥补梯度消失和long-term，改善RNN模型水准。
+第一方面，时空建模算是行为识别任务的首要原则，由于RNN结构缺乏空间建模能力，相关的方法通常也无法取得竞争性的结果。最近，Hong和Liang提出了一个新颖的双流RNN结构来为骨架数据建模时域和空域特征，其中骨架轴的交换作为数据预处理来更好地学习空间域特征，该工作的框架如下图3所示。
+Jun和Amir对骨架序列的遍历方法进行了研究，以此来获取时空域的隐藏关系。一般的方法将将关节排列成简单的链，这忽略了相邻关节的运动依赖关系，而提出了基于树结构的关节遍历方法，该方法在人体关节的联系不够牢固时也不会添加虚假连接。然后使用带有信任门trust gate的LSTM来区分输入，即如果树状输入单元是可靠的，则将使用输入的潜在空间信息来更新记忆单元。
+受CNN适合建模空间信息这一特性的启发，Chunyu和Baochang使用attention RNN和CNN模型来改善复杂的时空建模。首先在残差学习模块中使用时域注意力子模型，来重新校准骨架序列中的时域注意力，然后后接时空卷积子模型（将上一子模型输出的校准后的关节序列视为图像）。
+此外，使用一个注意力循环关系 LSTM 网络来学习骨架序列中的时空特征，其中 RNN 学习空间特征、多层LSTM学习时域特征。
+第二方面，网络结构也算是RNN的固有缺点。尽管RNN的性质决定了其适合处理序列数据， 但众所周知的是梯度爆炸和消失问题不可避免。LSTM 和 GRU可以在一定程度上缓解这一问题，但tanh和sigmoid激活函数可能还是会导致层间的梯度衰减。为了解决这一缺陷，一些新型的RNN结构被提出，Shuai和Wanqing提出了一个独立的RNN，该网络可以解决梯度爆炸和消失问题，这使得构建一个更长更深的RNN网络来学习鲁棒性更好的高级语义特征成为可能。这一改进的RNN不仅可以用于骨架行为识别，也可用用于其他领域例如语言模型。在这种结构中，一层内的神经元彼此独立，因此可以用于处理更长的序列。
+最后一个方面，即第三个方面，数据驱动方面。考虑到并不是所有的关节对行为分析有用，在LSTM网络中添加了全局意识关注global contex-aware attention来选择性地关注骨架序列中信息丰富的关节。图4（a）展示了该方法的可视化效果，从中我们可以发现信息量更大的关节用红色圆圈表示，表示这些关节对该特定的行为更重要。
+另外，由于数据集或深度传感器所提供的骨架并不是完美的，这可能会影响行为识别任务的结果，所以[52]将骨架转换为另一种坐标系统来提升尺度变化、旋转、平移的鲁棒性，然后从转换后的数据中提取显著运动特征，而不是直接将原始骨架数据输入到LSTM中，图4（b）展示了这一特征表示过程。
+除了上述这些，还有很多有价值的使用RNN的方法着眼于大视角变化、单个骨架中各关节的关系等问题。然而，我们必须承认在特定的建模方面RNN-based的方法确实比CNN based方法弱，接下来讨论另一个有趣的问题：CNN-based方法如果进行时域信息建模以及如何找到时空信息的相对平衡点。
+(2) CNN Based methods 卷积神经网络也被用于基于骨架的行为识别。和RNN不同的是，CNN凭借其自然、出色的高级信息提取能力可以有效且轻松地学习高级语义线索。不过CNN通常专注于image-based任务，而基于骨架序列的行为识别任务毫无疑问是一个强时间依赖的问题。所以在基于CNN的架构中，如何平衡且更充分地利用空间信息和时域信息就非常有挑战了。
+为了满足CNN输入的需要，3D骨架序列数据通常要从向量序列转换为伪图像，然而，要同时具有时空信息的相关表示pertinent representation并不容易，因此许多研究者将骨架关节编码为多个2D伪图像，然后将其输入到CNN中来学习有用的特征[53,54]。" />
+<meta property="og:url" content="https://sinterwong.gitee.io/post/%E8%AE%BA%E6%96%87%E7%BF%BB%E8%AF%91%E5%9F%BA%E4%BA%8E%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%9A%84%E9%AA%A8%E9%AA%BC%E5%8A%A8%E4%BD%9C%E8%AF%86%E5%88%AB%E7%A0%94%E7%A9%B6%E7%BB%BC%E8%BF%B0/" />
+<meta property="og:site_name" content="基于深度学习的骨骼动作识别研究综述" />
+<meta property="og:image"
+  content="https://sinterwong.gitee.io/">
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+<meta property="article:published_time" content="2021-03-16 13:05:34 &#43;0800 CST" />
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+  <div style="position: relative">
+  <header class="Header js-details-container Details px-3 px-md-4 px-lg-5 flex-wrap flex-md-nowrap open Details--on">
+    <div class="Header-item mobile-none" style="margin-top: -4px; margin-bottom: -4px;">
+      <a class="Header-link" href="https://sinterwong.gitee.io/">
+        <svg class="octicon" height="32" viewBox="0 0 16 16" version="1.1" width="32">
+          <path fill-rule="evenodd"
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+          </path>
+        </svg>
+      </a>
+    </div>
+    <div class="Header-item d-md-none">
+      <button class="Header-link btn-link js-details-target" type="button"
+        onclick="document.querySelector('#header-search').style.display = document.querySelector('#header-search').style.display == 'none'? 'block': 'none'">
+        <svg height="24" class="octicon octicon-three-bars" viewBox="0 0 16 16" version="1.1" width="24">
+          <path fill-rule="evenodd"
+            d="M1 2.75A.75.75 0 011.75 2h12.5a.75.75 0 110 1.5H1.75A.75.75 0 011 2.75zm0 5A.75.75 0 011.75 7h12.5a.75.75 0 110 1.5H1.75A.75.75 0 011 7.75zM1.75 12a.75.75 0 100 1.5h12.5a.75.75 0 100-1.5H1.75z">
+          </path>
+        </svg>
+      </button>
+    </div>
+    <div style="display: none;" id="header-search"
+      class="Header-item Header-item--full flex-column flex-md-row width-full flex-order-2 flex-md-order-none mr-0 mr-md-3 mt-3 mt-md-0 Details-content--hidden-not-important d-md-flex">
+      <div
+        class="Header-search header-search flex-auto js-site-search position-relative flex-self-stretch flex-md-self-auto mb-3 mb-md-0 mr-0 mr-md-3 scoped-search site-scoped-search js-jump-to">
+        <div class="position-relative">
+          <form target="_blank" action="https://www.google.com/search" accept-charset="UTF-8" method="get"
+            autocomplete="off">
+            <label
+              class="Header-search-label form-control input-sm header-search-wrapper p-0 js-chromeless-input-container header-search-wrapper-jump-to position-relative d-flex flex-justify-between flex-items-center">
+              <input type="text"
+                class="Header-search-input form-control input-sm header-search-input jump-to-field js-jump-to-field js-site-search-focus js-site-search-field is-clearable"
+                name="q" value="" placeholder="Search" autocomplete="off">
+              <input type="hidden" name="q" value="site:https://sinterwong.gitee.io/">
+            </label>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="Header-item Header-item--full flex-justify-center d-md-none position-relative">
+      <a class="Header-link " href="https://sinterwong.gitee.io/">
+        <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+          width="32">
+          <path fill-rule="evenodd"
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+          </path>
+        </svg>
+      </a>
+    </div>
+    <div class="Header-item" style="margin-right: 0;">
+      <a href="javascript:void(0)" class="Header-link no-select" onclick="switchTheme()">
+        <svg style="fill: var(--color-profile-color-modes-toggle-moon);" class="no-select" viewBox="0 0 16 16"
+          version="1.1" width="16" height="16">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M4.52208 7.71754C7.5782 7.71754 10.0557 5.24006 10.0557 2.18394C10.0557 1.93498 10.0392 1.68986 10.0074 1.44961C9.95801 1.07727 10.3495 0.771159 10.6474 0.99992C12.1153 2.12716 13.0615 3.89999 13.0615 5.89383C13.0615 9.29958 10.3006 12.0605 6.89485 12.0605C3.95334 12.0605 1.49286 10.001 0.876728 7.24527C0.794841 6.87902 1.23668 6.65289 1.55321 6.85451C2.41106 7.40095 3.4296 7.71754 4.52208 7.71754Z">
+          </path>
+        </svg>
+      </a>
+    </div>
+  </header>
+</div>
+  
+<div>
+  <main>
+    <div class="gisthead pagehead bg-gray-light pb-0 pt-3 mb-4">
+      <div class="px-0">
+        <div class="mb-3 d-flex px-3 px-md-3 px-lg-5">
+          <div class="flex-auto min-width-0 width-fit mr-3">
+            <div class="d-flex">
+              <div class="d-none d-md-block">
+                <a class="avatar mr-2 flex-shrink-0" href="https://sinterwong.gitee.io/">
+                  <img class=" avatar-user"
+                    src="https://sinterwong.gitee.io/images/avatar.png"
+                    width="32" height="32"></a>
+              </div>
+              <div class="d-flex flex-column">
+                <h1 class="break-word f3 text-normal mb-md-0 mb-1">
+                  <span class="author">
+                    <a href="https://sinterwong.gitee.io/"></a></span><span
+                    class="path-divider">/</span><strong class="css-truncate-target mr-1" style="max-width: 410px"><a
+                      href="https://sinterwong.gitee.io/post/%E8%AE%BA%E6%96%87%E7%BF%BB%E8%AF%91%E5%9F%BA%E4%BA%8E%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%9A%84%E9%AA%A8%E9%AA%BC%E5%8A%A8%E4%BD%9C%E8%AF%86%E5%88%AB%E7%A0%94%E7%A9%B6%E7%BB%BC%E8%BF%B0/">基于深度学习的骨骼动作识别研究综述</a></strong>
+                </h1>
+                <div class="note m-0">
+                  Created <relative-time datetime="Tue, 16 Mar 2021 13:05:34 &#43;0800"
+                    class="no-wrap">
+                    Tue, 16 Mar 2021 13:05:34 &#43;0800</relative-time>
+
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-lg px-3 new-discussion-timeline">
+      <div class="repository-content gist-content">
+        <div>
+          <div class="js-gist-file-update-container js-task-list-container file-box">
+            <div id="file-pytest" class="file my-2">
+              <div class="file-header d-flex flex-md-items-center flex-items-start">
+                <div class="file-info d-flex flex-md-items-center flex-items-start flex-order-1 flex-auto">
+                  <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                    4829 Words
+                    
+
+                  </div>
+                  <div class="file-actions flex-order-2 pt-0">
+                    
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="Box-body px-5 pb-5">
+                <article class="markdown-body entry-content container-lg"><h1 id="基于深度学习的骨骼动作识别研究综述">基于深度学习的骨骼动作识别研究综述</h1>
+<p>【paper】<a href="https://arxiv.org/pdf/2002.05907.pdf">A Survey on 3D Skeleton-Based Action Recognition Using Learning Method</a></p>
+<p>当前动作识别的主流研究方向包括RGB图像分类、骨架信息的识别、时序的行为检测、时空的行为检测。</p>
+<h2 id="abstrck">Abstrck</h2>
+<p>由于关键点检测的潜在优势，基于3D骨架的行为识别成为CV的活跃主题。</p>
+<p>然而，之前的行为识别综述大多数集中于调研以视频或者RGB数据为输入的方法，关于骨架数据为输入的方法调研的很少，一般都是直接说一下骨架数据的表示或某些经典技术在特定数据集上的表现；此外，尽管深度学习方法已经在这个领域应用多年，但是仍然没有相关的研究来从深度学习结构的角度对其进行介绍或总结。</p>
+<p>本文以<strong>数据驱动</strong>的方式，介绍骨架信息在输入RNN/CNN/GCN算子前的预处理方式；最后简要介绍了一下最大的3D骨架数据集NTU-RGB+D及其最新版本NTU-RGB+D 120，并展示基于这两个数据集测试的几种顶级的算法。</p>
+<h3 id="introduction">Introduction</h3>
+<p>行为识别有非常广泛但又未被充分解决的应用领域，例如智能监控系统、人机交互、虚拟现实、机器人等。以往的方法中都使用RGB图像序列，深度图像序列，视频或者这些模态的特定融合（例如RGB+光流），也取得了超出预期的结果。然而，和骨架数据相比，前述模态会产生更多的计算消耗，且在面对复杂背景以及人体尺度变化、视角变化和运动速度变化时鲁棒性不足。此外，像Microsoft Kinect这样的传感器和一些先进的人体姿态估计算法都可以让我们更轻松地获得准确的3D骨架数据。</p>
+<p>除了与其他模态数据相比具有的优势，骨架序列还有如下三个主要的特点：</p>
+<ul>
+<li>
+<p>空间信息，关节节点与相邻节点之间存在较强的相关性，从而获得了丰富的体结构信息</p>
+</li>
+<li>
+<p>时域信息，帧与帧之间的方式，强时间相关也可以使用。</p>
+</li>
+<li>
+<p>时空域共线关系</p>
+</li>
+</ul>
+<p>因此，骨骼数据吸引了许多研究者对人类行为识别或检测的努力，骨骼的应用也越来越广泛。</p>
+<p>基于骨骼序列的行为识别是个时序问题，因此传统的基于骨架的方法通常都是从特定的骨架序列中提取运动模式，这引出了许多手工特征的研究，这些手工特征经常会利用不同关节间的相对3D旋转和平移。然而，有文献认为这些手工特征只在一些特定数据集上表现良好，这进一步说明了从一个数据集上提取的手工特征可能无法迁移到其他数据集上，这使得行为识别算法难以推广或应用到更广泛的应用领域。</p>
+<p>随着深度学习方法在其他在其他计算机视觉任务上的发展和先进表现，使用骨架数据的RNN,CNN和GCN也开始出现。图2展示了基于3D骨架的深度学习行为识别方法的通用pipeline。</p>
+<p><!-- raw HTML omitted --></p>
+<p>在基于RNN的方法中，骨架序列是关节坐标的自然时间序列，这可以被视为序列向量，而RNN本身就适合于处理时间序列数据。此外，为了进一步改善学习到的关节序列的时序上下文信息，一些别的RNN(LSTM,GRU)方法也被用到骨架行为识别中。</p>
+<p>当使用CNN来处理这一基于骨架的任务的时候，可以将其视为基于RNN方法的补充，因为CNN结构能更好地捕获输入数据的空间cues，而基于RNN的方法正缺乏空间信息的构建。</p>
+<p>最后，相对新的方法图卷积神经网络GCN也有用于骨架数据处理中，因为骨架数据本身就是一个自然的拓扑图数据结构（关节点和骨头可以被视为图的节点和边），而不是图像或序列那样的格式。</p>
+<h2 id="methods">Methods</h2>
+<h3 id="1-rnn-based-methods">(1) RNN based methods</h3>
+<p>RNN[40]通过将上一时刻的输出作为当前时刻的输入来形成其结构内部的递归连接，这被证明是一种处理序列数据的有效方法。LSTM和GRU分别在RNN内部引入了门机制和线性记忆单元弥补梯度消失和long-term，改善RNN模型水准。</p>
+<p>第一方面，时空建模算是行为识别任务的首要原则，由于RNN结构缺乏空间建模能力，相关的方法通常也无法取得竞争性的结果。最近，Hong和Liang提出了一个新颖的双流RNN结构来为骨架数据建模时域和空域特征，其中骨架轴的交换作为数据预处理来更好地学习空间域特征，该工作的框架如下图3所示。</p>
+<p><!-- raw HTML omitted --></p>
+<p>Jun和Amir对骨架序列的遍历方法进行了研究，以此来获取时空域的隐藏关系。一般的方法将将关节排列成简单的链，这忽略了相邻关节的运动依赖关系，而提出了基于树结构的关节遍历方法，该方法在人体关节的联系不够牢固时也不会添加虚假连接。然后使用带有信任门trust gate的LSTM来区分输入，即如果树状输入单元是可靠的，则将使用输入的潜在空间信息来更新记忆单元。</p>
+<p>受CNN适合建模空间信息这一特性的启发，Chunyu和Baochang使用attention RNN和CNN模型来改善复杂的时空建模。首先在残差学习模块中使用时域注意力子模型，来重新校准骨架序列中的时域注意力，然后后接时空卷积子模型（将上一子模型输出的校准后的关节序列视为图像）。</p>
+<p>此外，使用一个注意力循环关系 LSTM 网络来学习骨架序列中的时空特征，其中 RNN 学习空间特征、多层LSTM学习时域特征。</p>
+<p>第二方面，网络结构也算是RNN的固有缺点。尽管RNN的性质决定了其适合处理序列数据， 但众所周知的是梯度爆炸和消失问题不可避免。LSTM 和 GRU可以在一定程度上缓解这一问题，但tanh和sigmoid激活函数可能还是会导致层间的梯度衰减。为了解决这一缺陷，一些新型的RNN结构被提出，Shuai和Wanqing提出了一个独立的RNN，该网络可以解决梯度爆炸和消失问题，这使得构建一个更长更深的RNN网络来学习鲁棒性更好的高级语义特征成为可能。这一改进的RNN不仅可以用于骨架行为识别，也可用用于其他领域例如语言模型。在这种结构中，一层内的神经元彼此独立，因此可以用于处理更长的序列。</p>
+<p>最后一个方面，即第三个方面，数据驱动方面。考虑到并不是所有的关节对行为分析有用，在LSTM网络中添加了全局意识关注global contex-aware attention来选择性地关注骨架序列中信息丰富的关节。图4（a）展示了该方法的可视化效果，从中我们可以发现信息量更大的关节用红色圆圈表示，表示这些关节对该特定的行为更重要。</p>
+<p><!-- raw HTML omitted --></p>
+<p>另外，由于数据集或深度传感器所提供的骨架并不是完美的，这可能会影响行为识别任务的结果，所以[52]将骨架转换为另一种坐标系统来提升尺度变化、旋转、平移的鲁棒性，然后从转换后的数据中提取显著运动特征，而不是直接将原始骨架数据输入到LSTM中，图4（b）展示了这一特征表示过程。</p>
+<p>除了上述这些，还有很多有价值的使用RNN的方法着眼于大视角变化、单个骨架中各关节的关系等问题。然而，我们必须承认在特定的建模方面RNN-based的方法确实比CNN based方法弱，接下来讨论另一个有趣的问题：CNN-based方法如果进行时域信息建模以及如何找到时空信息的相对平衡点。</p>
+<h3 id="2-cnn-based-methods">(2) CNN Based methods</h3>
+<p>卷积神经网络也被用于基于骨架的行为识别。和RNN不同的是，CNN凭借其自然、出色的高级信息提取能力可以有效且轻松地学习高级语义线索。不过CNN通常专注于image-based任务，而基于骨架序列的行为识别任务毫无疑问是一个强时间依赖的问题。所以在基于CNN的架构中，如何平衡且更充分地利用空间信息和时域信息就非常有挑战了。</p>
+<p>为了满足CNN输入的需要，3D骨架序列数据通常要从向量序列转换为伪图像，然而，要同时具有时空信息的相关表示pertinent representation并不容易，因此许多研究者将骨架关节编码为多个2D伪图像，然后将其输入到CNN中来学习有用的特征[53,54]。</p>
+<p>Wang[55]提出了关联轨迹图(Joint Trajectory Maps, JTM)，它通过颜色编码将关节轨迹的空间配置和动态信息spatial configuration and dynamics of joint trajectories表示为三个纹理图像。然而，这种方法有点复杂，且在映射过程中丢失了重要信息。为了克服这一缺陷，Bo和Mingyi[56]使用平移不变的图像映射策略，先根据人体物体结构把每帧图像的人体骨架关节分为五个主要部分，然后把这些部分映射为2D形式。这种方法是的骨架图像同时包含了时域信息和空间信息。然而，虽然性能得到改善，但是将人体骨架关节作为孤立的点是不合理的，因为在真是世界中整个身体的各个部分都会存在紧密的联系。例如当我们挥手的时候，不仅仅要考虑和手直接相关的关节，还要考虑其他部分的情况，例如肩膀和腿也需要被考虑。</p>
+<p>Yanshan和Rongjie[57]从几何代数中提出了形状运动表示法shape-motion representaion，解决了关节和骨骼的重要性，充分利用了骨架序列所提供的信息，如图5（a）所示。</p>
+<p>类似的，[2]也使用了增强的骨架可视化来表示骨架数据，Carlos和Jessica[58]基于运动信息提出新的表示方法（命名为SkeleMotion），该方法通过显式计算关节运动的幅度和方向值来编码时间动态信息，如图5（b）所示。</p>
+<p>此外，和SkeleMotion类似，[59]使用SkeleMotion的框架但是基于树结构和参考关节来表示骨架图像。</p>
+<p>这些CNN-based方法通常把时域动态和关节简单地编码为行和列，来将骨架序列表示为图像，因此卷积的时候仅考虑了卷积核内的相邻关节来学习共现特征，也就是说，对每个关节来说，一些潜在相关的关节会被忽略，因此CNN不能学习到相应的有用的特征。Chao和Qiaoyong[61]使用一个端到端的框架通过分层方法来学习共现特征，在该框架中逐步汇总不同层级的上下文信息。首先对点级point-level信息进行独立编码，然后在时域和空域将它们组合成语义表示。</p>
+<p>在CNN-Based的技术中，除了3D骨架序列表示之外也有一些别的问题，例如模型的大小和速度[3]，CNN的架构（双流或者单流[62]），遮挡，视角变化等等[2,3]。所以使用CNN来解决基于骨架的行为识别任务仍是一个开放的问题，需要研究人员进行深入研究。</p>
+<p><img src="https://p.qlogo.cn/qqmail_head/j8cooK2zCqpvL1WpbsdvPUqCpib5JmNemrbGO4NuiaRT5o7SeTJ4UblcLIyJA3xBicibTkwtFoYJZwc/0" alt="图5"></p>
+<h3 id="3-gcn-based-methods">(3) GCN based methods</h3>
+<p>人类3D骨架数据是自然的拓扑图，而不是一系列向量（RNN-based方法中的思路）或是伪图像（CNN-based方法中的思路），因此GCN（能够有效表示图形结构数据）最近被频繁地用到骨架行为识别任务中。目前现存的两种与图相关的神经网络有图循环神经网络GNN和图卷积神经网络GCN，本综述主要关注GCN，同时我们也会展示一些相关的先进结果。而且仅从骨架的角度来看的话，把骨架序列简单地编码为序列向量或2D网格并不能完全表达相关关节的依赖关系。图卷积神经网络Graph convolutional neural networks作为CNN的一种泛化形式，可以应用于骨架图在内的任意结构。在基于GCN的骨架行为识别技术中，最重要的问题是如何把原始数据组织称特定的图结构（还是和骨架数据的表达相关）。</p>
+<p>Sijie和Yuanjun[31]首次提出了一种基于骨架动作识别的新模型&ndash;时空图卷积网络ST-GCN，该网络首先将人的关节作为时空图的顶点vertexs，将人体连通性和时间作为图的边edges；然后使用标准Softmax分类器来讲ST-GCN上获取的高级特征图划分为对应的类别。这项工作让更多人关注到使用GCN进行骨架行为识别的优越性，因此最近出现了许多相关工作。</p>
+<p>最常见的研究集中于对骨架数据的有效使用[68,78]，Maose和Siheng[68]提出的运动结构图卷积网络(Action Structural Graph Convolutional Network, AS-GCN)不仅能够识别人的动作，还可以使用多任务学习策略来输出目标下一个可能的姿态pose。这项工作中构造的图结构可以通过两个子模块Actional Links和Structual Links来捕获关节间更丰富的依赖性。图6展示了AS-GCN的特征学习过程和其广义骨架图结构，该模型中使用的多任务学习策略可能是一个很不错的方向，因为行为识别任务可能会从其他补充任务中得到提升。</p>
+<p>根据上述介绍和讨论，最受关注的地方仍然是数据驱动的，我们要做的就是获取3D骨架序列数据背后的潜在信息，而GCN-based行为识别主要围绕着“如何获取”这一问题展开，这仍然是一个开放的具有挑战的问题。尤其骨架数据本身就是时空耦合的，此外将骨架数据转换为图时，关节和骨骼之间的连接也是时空耦合的。</p>
+<p><!-- raw HTML omitted --></p>
+<h2 id="latest-datasets-and-performance">Latest Datasets and Performance</h2>
+<p><img src="https://p.qlogo.cn/qqmail_head/j8cooK2zCqpvL1WpbsdvPUqCpib5JmNemrbGO4NuiaRT5XaPZib24I3WLlDOns5YZytxVw6Nodphiaw/0" alt="table"></p>
+</article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+  <div class="footer container-xl width-full p-responsive">
+  <div
+    class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between flex-sm-items-center pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+    <a aria-label="Homepage" title="GitHub" class="footer-octicon d-none d-lg-block mr-lg-4" href="https://sinterwong.gitee.io/">
+      <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24">
+        <path fill-rule="evenodd"
+          d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+        </path>
+      </svg>
+    </a>
+    <ul class="list-style-none d-flex flex-wrap col-12 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+      
+      <li class="mr-3 mr-lg-0">Theme by <a href='https://github.com/MeiK2333/github-style'>github-style</a></li>
+      
+    </ul>
+  </div>
+  <div class="d-flex flex-justify-center pb-6">
+    <span class="f6 text-gray-light"></span>
+  </div>
+
+
+</div>
+</body>
+
+<script type="application/javascript" src="https://sinterwong.gitee.io/js/github-style.js"></script>
+
+
+
+</html>

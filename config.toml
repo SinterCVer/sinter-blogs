@@ -1,5 +1,5 @@
 baseURL = "https://sinterwong.gitee.io/"
 languageCode = "en-us"
-title = "My New Hugo Site"
+title = "Sinter's blogs"
 theme = "github-style"
 contentDir = "content"
